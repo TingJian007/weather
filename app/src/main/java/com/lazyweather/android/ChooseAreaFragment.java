@@ -90,32 +90,33 @@ public class ChooseAreaFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {              //listView的点击事件
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                //根据当前级别进行判断
                 if (currentLevel == LEVEL_PROVINCE) {
                     selectedProvince = provinceList.get(i);
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(i);
                     queryCounties();
-                }else if (currentLevel == LEVEL_COUNTY){
+                }else if (currentLevel == LEVEL_COUNTY){         //判断当前级别是LEVEL_COUNTY
                     String weatherId = countyList.get(i).getWeatherId();
-                    if (getActivity() instanceof MainActivity) {
-                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                        intent.putExtra("weather_id", weatherId);
+                    if (getActivity() instanceof MainActivity) {             //在碎片中调用getActivity判断当前碎片是否在MainActivity中
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);//则启动WeatherActivity
+                        intent.putExtra("weather_id", weatherId);   //将当前县的天气id传入
                         startActivity(intent);
                         getActivity().finish();
-                    }else if (getActivity() instanceof WeatherActivity) {
+                    }else if (getActivity() instanceof WeatherActivity) {   //在碎片中调用getActivity判断当前碎片是否在WeatherActivity中
                         WeatherActivity activity = (WeatherActivity) getActivity();
-                        activity.drawerLayout.closeDrawers();
-                        activity.swipeRefresh.setRefreshing(true);
-                        activity.requestWeather(weatherId);
+                        activity.drawerLayout.closeDrawers();           //关闭滑动菜单
+                        activity.swipeRefresh.setRefreshing(true);     //显示下拉刷新进度条
+                        activity.requestWeather(weatherId);              //请求新城市的天气信息
                     }
                 }
             }
         });
-        backButton.setOnClickListener(new View.OnClickListener() {
+        backButton.setOnClickListener(new View.OnClickListener() {            //backButton的点击事件
             @Override
             public void onClick(View view) {
                 if (currentLevel == LEVEL_COUNTY) {
@@ -130,15 +131,17 @@ public class ChooseAreaFragment extends Fragment {
 
     //查询全国所有的省，优先从数据库中查询，如果没有查询到再去服务器查询
     private void queryProvinces() {
-        titleText.setText("中国");
+        titleText.setText("中国");               //头布局标题设置成中国
+        //visibility属性VISIBLE、INVISIBLE、GONE的区别:       VISIBLE：设置控件可见    INVISIBLE：设置控件不可见     GONE：设置控件隐藏
+        // 而INVISIBLE和GONE的主要区别是：当控件visibility属性为INVISIBLE时，界面保留了view控件所占有的空间；而控件属性为GONE时，界面则不保留view控件所占有的空间。
         backButton.setVisibility(View.GONE);
-        provinceList = DataSupport.findAll(Province.class);
+        provinceList = DataSupport.findAll(Province.class);       //读取省级数据接口
         if (provinceList.size() > 0) {
-            dataList.clear();
-            for (Province province : provinceList) {
-                dataList.add(province.getProvinceName());
+            dataList.clear();                                     //清空dataList中的元素
+            for (Province province : provinceList) {             //遍历省数据
+                dataList.add(province.getProvinceName());        //添加元素到dataList
             }
-            adapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged();                      //当发现数据集有改变的情况，或者读取到数据的新状态时，就会调用notifyDataSetChanged()方法
             listView.setSelection(0);
             currentLevel = LEVEL_PROVINCE;
         } else {
@@ -193,24 +196,24 @@ public class ChooseAreaFragment extends Fragment {
     //根据传入的地址和类型从服务器上查询省市县数据
     private void queryFromServer(String address, final String province) {
         showProgressDialog();
-        HttpUtil.sendOkHttpRequest(address, new Callback() {
-            public void onResponse(Call call, Response response) throws IOException {
+        HttpUtil.sendOkHttpRequest(address, new Callback() {              //调用HttpUtil中的sendOkHttpRequest方法向服务器发送请求
+            public void onResponse(Call call, Response response) throws IOException {                   //响应数据回调
                 String responseText = response.body().string();
                 boolean result = false;
                 if ("province".equals(province)) {
-                    result = Utility.handleProvinceResponse(responseText);
+                    result = Utility.handleProvinceResponse(responseText);           //调用Utility中的handleProvinceResponse方法解析处理服务器返回的数据并存储到数据库
                 } else if ("city".equals(province)) {
                     result = Utility.handleCityResponse(responseText, selectedProvince.getId());
                 } else if ("county".equals(province)) {
                     result = Utility.handleCountyResponse(responseText, selectedCity.getId());
                 }
                 if (result) {
-                    getActivity().runOnUiThread(new Runnable() {
+                    getActivity().runOnUiThread(new Runnable() {               //runOnUiThread实现从子线程切换到主线程的操作
                         @Override
                         public void run() {
                             closeProgressDialog();
                             if ("province".equals(province)) {
-                                queryProvinces();
+                                queryProvinces();                              //直接将数据显示在主页面
                             } else if ("city".equals(province)) {
                                 queryCities();
                             } else if ("county".equals(province)) {

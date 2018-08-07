@@ -12,8 +12,10 @@ import okhttp3.Request;
 public class HttpUtil {
 
     public static void sendOkHttpRequest(String address,okhttp3.Callback callback){
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder().url(address).build();
-        client.newCall(request).enqueue(callback);
+        OkHttpClient client = new OkHttpClient();                           //创建OkHttpClient对象
+        Request request = new Request.Builder()
+                .url(address)                                               //请求接口，传参
+                .build();                                                   //创建Request对象
+        client.newCall(request).enqueue(callback);                          //得到Request对象，传入1回调
     }
 }

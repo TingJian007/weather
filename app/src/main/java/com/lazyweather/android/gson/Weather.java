@@ -15,6 +15,6 @@ public class Weather {
     public Now now;
     public Suggestion suggestion;
 
-    @SerializedName("daily_forecast")
-    public List<Forecast> forecastList;
+    @SerializedName("daily_forecast")          //数组
+    public List<Forecast> forecastList;        //使用list集合引用
 }
